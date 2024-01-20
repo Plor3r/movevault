@@ -1,0 +1,15 @@
+[package]
+name = "MoveVault"
+authors = ["qiwihui"]
+version = "0.0.1"
+published-at = "0x50349090140d32d78edbd0f5b595830742cb86668a0398233a6752301ed85986"
+
+[dependencies]
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/mainnet" }
+# SmartInscription = { git = "https://github.com/movescriptions/movescriptions.git", subdir = "sui", rev = "deploy_v3" }
+SmartInscription = { local = "../movescriptions/sui" }
+
+[addresses]
+movevault = "0x0"
+# movevault = "0xd58f99f4d569a74ac2be537e443249421b7da25b64aa416f02585c5ebb6849ea"
+# smartinscription = "0x51876533be1dfb70d54d5049bf373e7c4ee204da124dd5b2688cd497c8aceb61"
