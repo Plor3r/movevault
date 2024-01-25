@@ -12,8 +12,8 @@ const client = new SuiClient({
 	url: getFullnodeUrl('testnet'),
 });
 
-const PACKAGE_ID = env.PACKAGE_ID;
-const TICKRECORD_ID = env.TICKRECORD_ID;
+const PACKAGE_ID = env.MovescriptionPackageId;
+const TICKRECORD_ID = env.MovescriptionTicketRecordId;
 const tick = 'MOVE';
 
 const mint_fee = 0.1 * 1_000_000_000; // 1 SUI = 1_000_000_000 MIST

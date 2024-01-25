@@ -13,42 +13,19 @@ const client = new SuiClient({
 });
 
 const MoveVaultPackageId = env.MoveVaultPackageId;
-const MoveVaultGame = env.MoveVaultGame;
+const UserDataObjectId = "0xad697f0d8d508c8a5428ffa91f41f3b3ff05e22946e7e67897dcfccbedf9f56a";
 
 async function main() {
     const txb = new TransactionBlock();
-
     txb.moveCall({
-        target: `${MoveVaultPackageId}::movevault::jackpot_claimable`,
-        arguments: [txb.object(MoveVaultGame), txb.object('0x6')],
+        target: `${MoveVaultPackageId}::movevault::available`,
+        arguments: [txb.object(UserDataObjectId), txb.object('0x6')],
     })
     const result = await client.devInspectTransactionBlock({
         transactionBlock: txb,
         sender: '0x0000000000000000000000000000000000000000000000000000000000000000',
     });
-    console.log(result.results[0].returnValues[0]);
-
-    // == claim_jackpot
-    txb.moveCall({
-    	target: `${MoveVaultPackageId}::movevault::claim_jackpot`,
-    	arguments: [txb.object(MoveVaultGame), txb.object('0x6')],
-    });
-    txb.setGasBudget(40_000_000)
-
-    txb.setSender(keypair.getPublicKey().toSuiAddress());
-    try {
-        const result = await client.signAndExecuteTransactionBlock({
-            transactionBlock: txb,
-            signer: keypair,
-            requestType: 'WaitForLocalExecution',
-            options: {
-                showEffects: false,
-            },
-        });
-        console.log(result);
-    } catch (error) {
-        console.log(error)
-    }
+    console.log(result.results);
 }
 
 main();

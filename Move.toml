@@ -2,7 +2,7 @@
 name = "MoveVault"
 authors = ["qiwihui"]
 version = "0.0.1"
-published-at = "0x50349090140d32d78edbd0f5b595830742cb86668a0398233a6752301ed85986"
+# published-at = "0x50349090140d32d78edbd0f5b595830742cb86668a0398233a6752301ed85986"
 
 [dependencies]
 Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/mainnet" }

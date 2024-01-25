@@ -1,14 +1,15 @@
 module movevault::movevault {
     use std::ascii::string;
+    use std::option::{Self, Option};
 
     use sui::event::emit;
     use sui::tx_context::{Self, TxContext};
     use sui::object::{Self, UID};
     use sui::transfer::{public_share_object, public_transfer};
-    use std::option::{Self, Option};
     use sui::clock::{Self, Clock};
     use sui::table::{Self, Table};
 
+    use movevault::utils;
     use smartinscription::movescription::{Self, Movescription};
 
     const EInvalidInscription: u64 = 0;
@@ -19,12 +20,14 @@ module movevault::movevault {
     const ELessThanMinimumDeposit: u64 = 5;
 
     //Financial Model
+    const ReferenceApr: u64 = 180;
+    //0.5% daily of 360 days
     // 50M
     const MaxBalance: u64 = 50000000;
     // 10000+ deposits; will compound available rewards
     const MinimumDeposit: u64 = 10000;
     // 2.5M max claim daily, 10 days missed claims
-    // const MaxAvailable: u64 = 2500000;
+    const MaxAvailable: u64 = 2500000;
     // 125M
     const MaxPayouts: u64 = 125000000;
     const RatioPrecision: u64 = 10000;
@@ -37,6 +40,7 @@ module movevault::movevault {
         deposits: u64,
         last_time: u64,
         rewards: u64,
+        compound_deposits: u64,
     }
 
     struct ValutGame has key, store {
@@ -62,6 +66,11 @@ module movevault::movevault {
     }
 
     struct DepositReward has copy, drop {
+        user: address,
+        amount: u64
+    }
+
+    struct CompoundDeposit has copy, drop {
         user: address,
         amount: u64
     }
@@ -99,6 +108,7 @@ module movevault::movevault {
             deposits: 0,
             last_time: 0,
             rewards: 0,
+            compound_deposits: 0,
         }
     }
 
@@ -212,16 +222,16 @@ module movevault::movevault {
         emit(Deposit { user: sender, amount: amount });
     }
 
-    fun deposit_internal(user_data: &mut UserData, _user: address, amount: u64, clock: &Clock) {
+    fun deposit_internal(user_data: &mut UserData, user: address, amount: u64, clock: &Clock) {
         assert!(user_data.current_balance + amount <= MaxBalance, EMaxBalanceExceeded);
         assert!(user_data.payouts <= MaxPayouts, EMaxPayoutsExceeded);
 
         //if user has an existing balance see if we have to claim yield before proceeding
         //optimistically claim yield before reset
         //if there is a balance we potentially have yield
-        // if (user_data.current_balance > 0) {
-        //     compoundYield(user, user_data);
-        // };
+        if (user_data.current_balance > 0) {
+            compound_yield(user_data, user, clock);
+        };
 
         //update user
         user_data.deposits = user_data.deposits + amount;
@@ -281,5 +291,80 @@ module movevault::movevault {
         );
         public_transfer(inscription, last_user);
         emit(Claimed { user: last_user, amount: reward_amount });
+    }
+
+    // ======== Internal Functions ========
+    //@dev Returns tax bracket and adjusted amount based on the bracket
+    public fun available(vault_game: &mut ValutGame, user: address, clock: &Clock): (u64, u64) {
+        if (!table::contains(&vault_game.user_datas, user)) {
+            return (0, 0)
+        };
+        let user_data = table::borrow(&vault_game.user_datas, user);
+        return available_internal(user_data, clock)
+    }
+
+    //@dev Returns tax bracket and adjusted amount based on the bracket
+    public fun available_internal(user_data: &UserData, clock: &Clock): (u64, u64) {
+        let adjusted_amount = 0u64;
+        let limiter_rate = 0u64;
+
+        if (user_data.current_balance > 0) {
+            //payout is asymptotic and uses the current balance
+            //convert to daily apr
+            adjusted_amount = (user_data.current_balance * ReferenceApr *
+                utils::safe_sub(clock::timestamp_ms(clock), user_data.last_time)) / (360 * 100) / (86400 * 1000);
+            //minimize red candles
+            adjusted_amount = utils::min(MaxAvailable, adjusted_amount);
+        };
+
+        //apply compound rate limiter
+        let comp_surplus = utils::safe_sub(user_data.compound_deposits, user_data.deposits);
+        let multiplier = 50;
+
+        if (comp_surplus < 50000 * multiplier) {
+            limiter_rate = 0;
+        } else if (50000 * multiplier <= comp_surplus && comp_surplus < 250000 * multiplier) {
+            limiter_rate = 10;
+        } else if (250000 * multiplier <= comp_surplus && comp_surplus < 500000 * multiplier) {
+            limiter_rate = 15;
+        } else if (500000 * multiplier <= comp_surplus && comp_surplus < 750000 * multiplier) {
+            limiter_rate = 25;
+        } else if (750000 * multiplier <= comp_surplus && comp_surplus < 1000000 * multiplier) {
+            limiter_rate = 35;
+        } else if (comp_surplus >= 1000000 * multiplier) {
+            limiter_rate = 50;
+        };
+
+        adjusted_amount = (adjusted_amount * (100 - limiter_rate)) / 100;
+
+        // payout greater than the balance just pay the balance
+        if (adjusted_amount > user_data.current_balance) {
+            adjusted_amount = user_data.current_balance;
+        };
+        (limiter_rate, adjusted_amount)
+    }
+
+    //@dev Checks if yield is available and compound before performing additional operations
+    //compound only when yield is positive
+    fun compound_yield(user_data: &mut UserData, user: address, clock: &Clock) {
+        //get available
+        let (_, amount) = available_internal(user_data, clock);
+
+        // payout remaining allowable divs if exceeds
+        if (user_data.payouts + amount > MaxPayouts) {
+            amount = utils::safe_sub(MaxPayouts, user_data.payouts);
+        };
+
+        //attempt to compound yield and update stats;
+        if (amount > 0) {
+            //user stats
+            // user_data.deposits += 0; //compounding is not a deposit; here for clarity
+            user_data.compound_deposits = user_data.compound_deposits + amount;
+            user_data.payouts = user_data.payouts + amount;
+            user_data.current_balance = user_data.current_balance + amount;
+
+            //log events
+            emit(CompoundDeposit { user: user, amount: amount });
+        };
     }
 }
