@@ -12,13 +12,13 @@ const client = new SuiClient({
     url: getFullnodeUrl(env.Network),
 });
 
-const MoveVaultPackageId = env.MoveVaultPackageId;
+const MoveArkPackageId = env.MoveArkPackageId;
 const UserDataObjectId = "0xad697f0d8d508c8a5428ffa91f41f3b3ff05e22946e7e67897dcfccbedf9f56a";
 
 async function main() {
     const txb = new TransactionBlock();
     txb.moveCall({
-        target: `${MoveVaultPackageId}::movevault::available`,
+        target: `${MoveArkPackageId}::moveark::available`,
         arguments: [txb.object(UserDataObjectId), txb.object('0x6')],
     })
     const result = await client.devInspectTransactionBlock({

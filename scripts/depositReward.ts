@@ -12,15 +12,15 @@ const client = new SuiClient({
 	url: getFullnodeUrl(env.Network),
 });
 
-const MoveVaultPackageId = env.MoveVaultPackageId;
-const MoveVaultGame = env.MoveVaultGame;
+const MoveArkPackageId = env.MoveArkPackageId;
+const MoveArkGame = env.MoveArkGame;
 
 async function main() {
 	const txb = new TransactionBlock();
 	// == deposit_reward
 	txb.moveCall({
-		target: `${MoveVaultPackageId}::movevault::deposit_reward`,
-		arguments: [txb.object(MoveVaultGame), txb.object('0x6')],
+		target: `${MoveArkPackageId}::moveark::deposit_reward`,
+		arguments: [txb.object(MoveArkGame), txb.object('0x6')],
 	});
 	txb.setGasBudget(40_000_000)
 	txb.setSender(keypair.getPublicKey().toSuiAddress());

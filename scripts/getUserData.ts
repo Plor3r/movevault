@@ -2,8 +2,8 @@ import { loadSync as loadEnvSync } from "https://deno.land/std/dotenv/mod.ts"
 import { SuiClient, getFullnodeUrl } from "npm:@mysten/sui.js/client";
 
 const env = loadEnvSync();
-const MoveVaultPackageId = env.MoveVaultPackageId;
-const MoveVaultGame = env.MoveVaultGame;
+const MoveArkPackageId = env.MoveArkPackageId;
+const MoveArkGame = env.MoveArkGame;
 
 const client = new SuiClient({
     url: getFullnodeUrl(env.Network),
@@ -54,7 +54,7 @@ const getSuiObject = (id: string) => {
     })
 }
 
-const user_datas = await getSuiDynamicFields(MoveVaultGame, 'user_datas')
+const user_datas = await getSuiDynamicFields(MoveArkGame, 'user_datas')
 
 console.log(user_datas);
 

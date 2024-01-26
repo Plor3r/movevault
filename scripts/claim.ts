@@ -12,15 +12,15 @@ const client = new SuiClient({
     url: getFullnodeUrl(env.Network),
 });
 
-const MoveVaultPackageId = env.MoveVaultPackageId;
-const MoveVaultGame = env.MoveVaultGame;
+const MoveArkPackageId = env.MoveArkPackageId;
+const MoveArkGame = env.MoveArkGame;
 
 async function main() {
     const txb = new TransactionBlock();
 
     txb.moveCall({
-        target: `${MoveVaultPackageId}::movevault::jackpot_claimable`,
-        arguments: [txb.object(MoveVaultGame), txb.object('0x6')],
+        target: `${MoveArkPackageId}::moveark::jackpot_claimable`,
+        arguments: [txb.object(MoveArkGame), txb.object('0x6')],
     })
     const result = await client.devInspectTransactionBlock({
         transactionBlock: txb,
@@ -30,8 +30,8 @@ async function main() {
 
     // == claim_jackpot
     txb.moveCall({
-    	target: `${MoveVaultPackageId}::movevault::claim_jackpot`,
-    	arguments: [txb.object(MoveVaultGame), txb.object('0x6')],
+    	target: `${MoveArkPackageId}::moveark::claim_jackpot`,
+    	arguments: [txb.object(MoveArkGame), txb.object('0x6')],
     });
     txb.setGasBudget(40_000_000)
 

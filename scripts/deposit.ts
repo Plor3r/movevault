@@ -15,16 +15,16 @@ const client = new SuiClient({
 const MovescriptionPackageId = env.MovescriptionPackageId;
 const inscription_id = '0x0d8fd7b5903736ac7b564ec90d31efa4359452370f38f18f41ba27147847abce';
 
-const MoveVaultPackageId = env.MoveVaultPackageId;
-const MoveVaultGame = env.MoveVaultGame;
-const MoveVaultManagerCap = env.MoveVaultManagerCap;
+const MoveArkPackageId = env.MoveArkPackageId;
+const MoveArkGame = env.MoveArkGame;
+const MoveArkManagerCap = env.MoveArkManagerCap;
 
 async function main() {
 	const txb = new TransactionBlock();
 	// == set pause
 	// txb.moveCall({
-	// 	target: `${MoveVaultPackageId}::movevault::set_pause`,
-	// 	arguments: [txb.object(MoveVaultManagerCap), txb.object(MoveVaultGame), txb.pure(false)],
+	// 	target: `${MoveArkPackageId}::moveark::set_pause`,
+	// 	arguments: [txb.object(MoveArkManagerCap), txb.object(MoveArkGame), txb.pure(false)],
 	// });
 
 	// == deposit
@@ -33,8 +33,8 @@ async function main() {
 		arguments: [txb.object(inscription_id), txb.pure(10000)],
 	});
 	txb.moveCall({
-		target: `${MoveVaultPackageId}::movevault::deposit`,
-		arguments: [txb.object(MoveVaultGame), txb.object(move), txb.object('0x6')],
+		target: `${MoveArkPackageId}::moveark::deposit`,
+		arguments: [txb.object(MoveArkGame), txb.object(move), txb.object('0x6')],
 	});
 	txb.setGasBudget(40_000_000)
 	txb.setSender(keypair.getPublicKey().toSuiAddress());

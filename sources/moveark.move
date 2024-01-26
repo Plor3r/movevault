@@ -1,4 +1,4 @@
-module movevault::movevault {
+module moveark::moveark {
     use std::ascii::string;
     use std::option::{Self, Option};
 
@@ -9,7 +9,7 @@ module movevault::movevault {
     use sui::clock::{Self, Clock};
     use sui::table::{Self, Table};
 
-    use movevault::utils;
+    use moveark::utils;
     use smartinscription::movescription::{Self, Movescription};
 
     const EInvalidInscription: u64 = 0;
